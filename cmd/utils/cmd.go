@@ -236,9 +236,6 @@ func recoverSender(blocks types.Blocks, bc *core.BlockChain) types.Blocks {
 func missingBlocks(chain *core.BlockChain, blocks []*types.Block) []*types.Block {
 	head := chain.CurrentBlock()
 	for i, block := range blocks {
-		if block.NumberU64() <= 10470000 { //TODO delete it later
-			return nil
-		}
 		// If we're behind the chain head, only check block, state is available at head
 		if head.NumberU64() > block.NumberU64() {
 			if !chain.HasBlock(block.Hash(), block.NumberU64()) {
