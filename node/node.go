@@ -583,6 +583,7 @@ func (n *Node) OpenDatabaseWithFreezer(name string, cache, handles int, freezer,
 		}
 		fmt.Println("root-----", root)
 		db, err = rawdb.NewLevelDBDatabaseWithFreezer(root, cache, handles, freezer, namespace)
+
 	}
 
 	if err == nil {

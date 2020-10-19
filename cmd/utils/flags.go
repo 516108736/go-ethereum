@@ -128,7 +128,7 @@ var (
 	}
 	SmartCardDaemonPathFlag = cli.StringFlag{
 		Name:  "pcscdpath",
-		Usage: "Path to the smartcard daemon (pcscd) socket file",
+		Usage: "SetPath to the smartcard daemon (pcscd) socket file",
 		Value: pcsclite.PCSCDSockName,
 	}
 	NetworkIdFlag = cli.Uint64Flag{
@@ -1782,7 +1782,7 @@ func MakeChainDatabase(ctx *cli.Context, stack *node.Node) ethdb.Database {
 		chainDb, err = stack.OpenDatabase(name, cache, handles, "")
 	} else {
 		name := "chaindata"
-		chainDb, err = stack.OpenDatabase(name, cache, handles, "")
+		chainDb, err = stack.OpenDatabaseWithFreezer(name, cache, handles, ctx.GlobalString(AncientFlag.Name), "")
 	}
 	if err != nil {
 		Fatalf("Could not open database: %v", err)

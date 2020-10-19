@@ -18,6 +18,7 @@
 package memorydb
 
 import (
+	"encoding/binary"
 	"errors"
 	"github.com/ethereum/go-ethereum/ethdb"
 	tethdb "github.com/ledgerwatch/turbo-geth/ethdb"
@@ -41,12 +42,18 @@ type Database struct {
 	lmdb tethdb.Database
 }
 
+func uint64ToBytes(u uint64) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, u)
+	return b
+}
+
 func (d *Database) HasAncient(kind string, number uint64) (bool, error) {
-	panic("implement me")
+	return d.lmdb.Has(kind, uint64ToBytes(number))
 }
 
 func (d *Database) Ancient(kind string, number uint64) ([]byte, error) {
-	panic("implement me")
+	return d.lmdb.Get(kind, uint64ToBytes(number))
 }
 
 func (d *Database) Ancients() (uint64, error) {
