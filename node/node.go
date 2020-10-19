@@ -19,6 +19,7 @@ package node
 import (
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/ethdb/memorydb"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -544,7 +545,10 @@ func (n *Node) OpenDatabase(name string, cache, handles int, namespace string) (
 	if n.config.DataDir == "" {
 		db = rawdb.NewMemoryDatabase()
 	} else {
-		db, err = rawdb.NewLevelDBDatabase(n.ResolvePath(name), cache, handles, namespace)
+		mdb := memorydb.New()
+		mdb.SetPath(n.ResolvePath(name))
+		db = mdb
+		fmt.Println("MMMMMMMMMMMMMMMMMMMMMMMMMM", n.ResolvePath(name))
 	}
 
 	if err == nil {
@@ -579,7 +583,6 @@ func (n *Node) OpenDatabaseWithFreezer(name string, cache, handles int, freezer,
 		}
 		fmt.Println("root-----", root)
 		db, err = rawdb.NewLevelDBDatabaseWithFreezer(root, cache, handles, freezer, namespace)
-		//db=rawdb.NewMemoryDatabase()
 	}
 
 	if err == nil {

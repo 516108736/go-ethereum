@@ -1782,7 +1782,7 @@ func MakeChainDatabase(ctx *cli.Context, stack *node.Node) ethdb.Database {
 		chainDb, err = stack.OpenDatabase(name, cache, handles, "")
 	} else {
 		name := "chaindata"
-		chainDb, err = stack.OpenDatabaseWithFreezer(name, cache, handles, ctx.GlobalString(AncientFlag.Name), "")
+		chainDb, err = stack.OpenDatabase(name, cache, handles, "")
 	}
 	if err != nil {
 		Fatalf("Could not open database: %v", err)

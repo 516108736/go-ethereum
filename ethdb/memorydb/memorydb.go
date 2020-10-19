@@ -41,16 +41,44 @@ type Database struct {
 	lmdb tethdb.Database
 }
 
+func (d *Database) HasAncient(kind string, number uint64) (bool, error) {
+	panic("implement me")
+}
+
+func (d *Database) Ancient(kind string, number uint64) ([]byte, error) {
+	panic("implement me")
+}
+
+func (d *Database) Ancients() (uint64, error) {
+	panic("implement me")
+}
+
+func (d *Database) AncientSize(kind string) (uint64, error) {
+	panic("implement me")
+}
+
+func (d *Database) AppendAncient(number uint64, hash, header, body, receipt, td []byte) error {
+	panic("implement me")
+}
+
+func (d *Database) TruncateAncients(n uint64) error {
+	panic("implement me")
+}
+
+func (d *Database) Sync() error {
+	panic("implement me")
+}
+
 // New returns a wrapped map with all the required database interface methods
 // implemented.
 func New() *Database {
-	panic(errors.New("ethdb/memorydb/memorydb.go"))
-	kv := tethdb.NewLMDB().Path("dsda").MustOpen()
-	db := tethdb.NewObjectDatabase(kv)
+	return &Database{}
+}
 
-	return &Database{
-		lmdb: db,
-	}
+func (d *Database) SetPath(path string) {
+	kv := tethdb.NewLMDB().Path(path).MustOpen()
+	db := tethdb.NewObjectDatabase(kv)
+	d.lmdb = db
 }
 
 // NewWithCap returns a wrapped map pre-allocated to the provided capcity with
