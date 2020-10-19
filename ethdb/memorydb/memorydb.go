@@ -202,5 +202,5 @@ func (b *batch) Reset() {
 
 // Replay replays the batch contents.
 func (b *batch) Replay(w ethdb.KeyValueWriter) error {
-	panic("not support")
+	return nil
 }
