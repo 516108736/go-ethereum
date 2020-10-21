@@ -21,6 +21,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ledgerwatch/turbo-geth/common/dbutils"
 	tethdb "github.com/ledgerwatch/turbo-geth/ethdb"
 )
 
@@ -83,7 +84,16 @@ func New() *Database {
 }
 
 func (d *Database) SetPath(path string) {
-	kv := tethdb.NewLMDB().Path(path).MustOpen()
+	kv, err := tethdb.NewLMDB().Path(path).WithBucketsConfig(func(defaultBuckets dbutils.BucketsCfg) dbutils.BucketsCfg {
+		return map[string]dbutils.BucketConfigItem{
+			bucket: {
+				Flags: 0,
+			},
+		}
+	}).Open()
+	if err != nil {
+		panic(err)
+	}
 	db := tethdb.NewObjectDatabase(kv)
 	d.lmdb = db
 }
