@@ -162,10 +162,11 @@ func ImportChain(chain *core.BlockChain, fn string) error {
 			continue
 		}
 		handleBlockEveryBlock(missing, chain)
+		cpuFile.handle(chain.CurrentBlock().NumberU64())
 		if _, err := chain.InsertChain(missing); err != nil {
 			return fmt.Errorf("invalid block %d: %v", n, err)
 		}
-		cpuFile.handle(chain.CurrentBlock().NumberU64())
+
 	}
 	return nil
 }
