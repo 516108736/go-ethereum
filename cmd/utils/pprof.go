@@ -28,7 +28,7 @@ func NewCpuFile() *CpuFile {
 
 func (c *CpuFile) handle(number uint64) {
 	if c.isStart {
-		if !c.isEnd && number >= 0 {
+		if !c.isEnd && number >= 500 {
 			pprof.StopCPUProfile()
 			if err := c.file.Close(); err != nil {
 				panic(err)
@@ -39,7 +39,7 @@ func (c *CpuFile) handle(number uint64) {
 		return
 	}
 
-	if number >= 500 {
+	if number >= 0 {
 		c.isStart = true
 		if err := pprof.StartCPUProfile(c.file); err != nil {
 			panic(err)
