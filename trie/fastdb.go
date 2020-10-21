@@ -54,6 +54,7 @@ func (f *fastDB) Hash() common.Hash {
 }
 
 func (f *fastDB) Commit(onleaf LeafCallback) (common.Hash, error) {
+	return common.Hash{}, nil
 	err := f.batch.Write()
 	hash := f.Hash()
 	f.cache = make(map[string][]byte)

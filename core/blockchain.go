@@ -1449,14 +1449,14 @@ func (bc *BlockChain) writeBlockWithState(block *types.Block, receipts []*types.
 	//
 	// Note all the components of block(td, hash->number map, header, body, receipts)
 	// should be written atomically. BlockBatch is used for containing all components.
-	blockBatch := bc.db.NewBatch()
-	rawdb.WriteTd(blockBatch, block.Hash(), block.NumberU64(), externTd)
-	rawdb.WriteBlock(blockBatch, block)
-	rawdb.WriteReceipts(blockBatch, block.Hash(), block.NumberU64(), receipts)
-	rawdb.WritePreimages(blockBatch, state.Preimages())
-	if err := blockBatch.Write(); err != nil {
-		log.Crit("Failed to write block into disk", "err", err)
-	}
+	//blockBatch := bc.db.NewBatch()
+	rawdb.WriteTd(bc.db, block.Hash(), block.NumberU64(), externTd)
+	rawdb.WriteBlock(bc.db, block)
+	rawdb.WriteReceipts(bc.db, block.Hash(), block.NumberU64(), receipts)
+	rawdb.WritePreimages(bc.db, state.Preimages())
+	//if err := blockBatch.Write(); err != nil {
+	//	log.Crit("Failed to write block into disk", "err", err)
+	//}
 	// Commit all cached state changes into underlying memory database.
 	root, err := state.Commit(bc.chainConfig.IsEIP158(block.Number()))
 	if err != nil {
