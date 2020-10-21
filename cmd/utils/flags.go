@@ -128,7 +128,7 @@ var (
 	}
 	SmartCardDaemonPathFlag = cli.StringFlag{
 		Name:  "pcscdpath",
-		Usage: "SetPath to the smartcard daemon (pcscd) socket file",
+		Usage: "Path to the smartcard daemon (pcscd) socket file",
 		Value: pcsclite.PCSCDSockName,
 	}
 	NetworkIdFlag = cli.Uint64Flag{

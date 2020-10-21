@@ -18,6 +18,7 @@ package state
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"math/big"
@@ -90,6 +91,8 @@ type stateObject struct {
 	dirtyCode bool // true if the code was updated
 	suicided  bool
 	deleted   bool
+
+	suisideAndNewInOneBlock bool
 }
 
 // empty returns whether the account is considered empty.
@@ -104,6 +107,7 @@ type Account struct {
 	Balance     *big.Int
 	CodeHash    []byte
 	Incarnation uint64
+	Deleted     bool
 }
 
 // newObject creates a state object.
@@ -195,6 +199,9 @@ func (s *stateObject) GetCommittedState(db Database, key common.Hash) common.Has
 	if value, cached := s.originStorage[key]; cached {
 		return value
 	}
+	if s.suisideAndNewInOneBlock {
+		return common.Hash{}
+	}
 	// If no live objects are available, attempt to use snapshots
 	var (
 		enc []byte
@@ -220,7 +227,6 @@ func (s *stateObject) GetCommittedState(db Database, key common.Hash) common.Has
 		if metrics.EnabledExpensive {
 			defer func(start time.Time) { s.db.StorageReads += time.Since(start) }(time.Now())
 		}
-
 		if enc, err = s.getTrie(db).TryGet(makeFastDbKey(s.address, s.data.Incarnation, key)); err != nil {
 			s.setError(err)
 			return common.Hash{}
@@ -292,6 +298,12 @@ func (s *stateObject) finalise() {
 	}
 }
 
+func uint64ToBytes(u uint64) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, u)
+	return b
+}
+
 func makeFastDbKey(addr common.Address, index uint64, key common.Hash) []byte {
 	if !common.FastDBMode {
 		return key.Bytes()
@@ -299,13 +311,16 @@ func makeFastDbKey(addr common.Address, index uint64, key common.Hash) []byte {
 	data := make([]byte, 0)
 	data = append(data, addr.Bytes()...)
 	data = append(data, uint64ToBytes(index)...)
-	data = append(data, key.Bytes()...) //TODO to hash?
+	data = append(data, key.Bytes()...)
 	return data
 }
 
 // updateTrie writes cached storage modifications into the object's storage trie.
 // It will return nil if the trie has not been loaded and no changes have been made
 func (s *stateObject) updateTrie(db Database) Trie {
+	if s.data.Deleted {
+		return nil
+	}
 	// Make sure all dirty slots are finalized into the pending storage area
 	s.finalise()
 	if len(s.pendingStorage) == 0 {

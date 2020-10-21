@@ -21,7 +21,6 @@ package core
 
 import (
 	"fmt"
-	"github.com/ethereum/go-ethereum/ethdb/memorydb"
 	"io/ioutil"
 	"math/big"
 	"os"
@@ -1947,14 +1946,4 @@ func verifyCutoff(t *testing.T, chain *BlockChain, canonical bool, inserted type
 // uint64ptr is a weird helper to allow 1-line constant pointer creation.
 func uint64ptr(n uint64) *uint64 {
 	return &n
-}
-
-func TestLmdb(t *testing.T) {
-	me := memorydb.New()
-	me.SetPath("./asd")
-	key := []byte("1")
-	value := []byte("2")
-	err := me.Put(key, value)
-	fmt.Println("err", err)
-
 }

@@ -18,10 +18,8 @@
 package state
 
 import (
-	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum/ethdb"
 	"math/big"
 	"sort"
 	"time"
@@ -458,6 +456,9 @@ func (s *StateDB) updateStateObject(obj *stateObject) {
 	if err != nil {
 		panic(fmt.Errorf("can't encode object at %x: %v", addr[:], err))
 	}
+	if obj.data.Incarnation != 0 {
+		fmt.Println("oooo", obj.data.Incarnation, obj.address.String())
+	}
 	if err = s.trie.TryUpdate(addr[:], data); err != nil {
 		s.setError(fmt.Errorf("updateStateObject (%x) error: %v", addr[:], err))
 	}
@@ -482,41 +483,13 @@ func (s *StateDB) deleteStateObject(obj *stateObject) {
 	if err := s.trie.TryDelete(addr[:]); err != nil {
 		s.setError(fmt.Errorf("deleteStateObject (%x) error: %v", addr[:], err))
 	}
-	StoreIncarnation(s.db.TrieDB().DiskDB(), addr, obj.data.Incarnation)
-}
-
-var (
-	preInc = []byte("i")
-)
-
-func uint64ToBytes(u uint64) []byte {
-	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, u)
-	return b
-}
-func StoreIncarnation(store ethdb.KeyValueStore, addr common.Address, inc uint64) {
-	bs := make([]byte, 0)
-	bs = append(bs, preInc...)
-	bs = append(bs, addr.Bytes()...)
-	store.Put(bs, uint64ToBytes(inc))
-}
-
-func GetIncarnation(store ethdb.KeyValueReader, addr common.Address) uint64 {
-	bs := make([]byte, 0)
-	bs = append(bs, preInc...)
-	bs = append(bs, addr.Bytes()...)
-	bb, err := store.Get(bs)
-	if err != nil || len(bb) == 0 {
-		return 0
-	}
-	return binary.BigEndian.Uint64(bb)
 }
 
 // getStateObject retrieves a state object given by the address, returning nil if
 // the object is not found or was deleted in this execution context. If you need
 // to differentiate between non-existent/just-deleted, use getDeletedStateObject.
 func (s *StateDB) getStateObject(addr common.Address) *stateObject {
-	if obj := s.getDeletedStateObject(addr); obj != nil && !obj.deleted {
+	if obj := s.getDeletedStateObject(addr); obj != nil && !obj.deleted && !obj.data.Deleted {
 		return obj
 	}
 	return nil
@@ -573,6 +546,7 @@ func (s *StateDB) getDeletedStateObject(addr common.Address) *stateObject {
 			return nil
 		}
 		data = new(Account)
+
 		if err := rlp.DecodeBytes(enc, data); err != nil {
 			log.Error("Failed to decode state object", "addr", addr, "err", err)
 			return nil
@@ -621,10 +595,9 @@ func (s *StateDB) createObject(addr common.Address, contraction bool) (newobj, p
 		if prev != nil {
 			newobj.data.Incarnation = prev.data.Incarnation + 1
 		} else {
-			newobj.data.Incarnation = GetIncarnation(s.db.TrieDB().DiskDB(), addr) + 1
+			newobj.data.Incarnation = 0
 		}
 	}
-
 	s.setStateObject(newobj)
 	if prev != nil && !prev.deleted {
 		return newobj, prev
@@ -815,11 +788,11 @@ func (s *StateDB) IntermediateRoot(deleteEmptyObjects bool) common.Hash {
 	for addr := range s.stateObjectsPending {
 		obj := s.stateObjects[addr]
 		if obj.deleted {
-			s.deleteStateObject(obj)
-		} else {
-			obj.updateRoot(s.db)
-			s.updateStateObject(obj)
+			obj.data.Deleted = true
 		}
+		obj.updateRoot(s.db)
+		s.updateStateObject(obj)
+
 	}
 	if len(s.stateObjectsPending) > 0 {
 		s.stateObjectsPending = make(map[common.Address]struct{})
@@ -864,6 +837,7 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 				rawdb.WriteCode(codeWriter, common.BytesToHash(obj.CodeHash()), obj.code)
 				obj.dirtyCode = false
 			}
+
 			// Write any storage changes in the state object to its storage trie
 			if err := obj.CommitTrie(s.db); err != nil {
 				return common.Hash{}, err
