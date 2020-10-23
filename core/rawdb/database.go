@@ -125,6 +125,7 @@ func NewDatabaseWithFreezer(db ethdb.KeyValueStore, freezer string, namespace st
 	// Create the idle freezer instance
 	frdb, err := newFreezer(freezer, namespace)
 	if err != nil {
+		fmt.Println("err123", err)
 		return nil, err
 	}
 	// Since the freezer can be stored separately from the user's key-value database,

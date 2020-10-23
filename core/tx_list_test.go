@@ -17,9 +17,16 @@
 package core
 
 import (
+	"fmt"
+	"github.com/ethereum/go-ethereum/core/rawdb"
+	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/ethdb/leveldb"
+	"github.com/ethereum/go-ethereum/ethdb/memorydb"
+	"io/ioutil"
 	"math/big"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -67,4 +74,67 @@ func BenchmarkTxListAdd(t *testing.B) {
 		list.Add(txs[v], DefaultTxPoolConfig.PriceBump)
 		list.Filter(priceLimit, DefaultTxPoolConfig.PriceBump)
 	}
+}
+
+func GetEthDB(lmdb bool) ethdb.Database {
+	dir, err := ioutil.TempDir("", "disklayer-test")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("file", dir, lmdb)
+	var kvdb ethdb.KeyValueStore
+	if lmdb {
+		kk := memorydb.New()
+		kk.SetPath(dir)
+		kvdb = kk
+	} else {
+		kvdb, err = leveldb.New(dir, 512, 524288, "")
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	frdb, err := rawdb.NewDatabaseWithFreezer(kvdb, "s", "")
+	if err != nil {
+		panic(err)
+	}
+	return frdb
+
+}
+
+func makeData(number int) [][]byte {
+	ans := make([][]byte, 0)
+	for index := 1; index <= number; index++ {
+		ans = append(ans, new(big.Int).SetUint64(uint64(index)).Bytes())
+	}
+	return ans
+}
+
+func TestAsd1(t *testing.T) {
+	numbers := 10
+	datas := makeData(numbers)
+
+	db := GetEthDB(false)
+	ts := time.Now()
+	for index := 0; index < numbers; index++ {
+		if err := db.Put(datas[index], datas[index]); err != nil {
+			panic(err)
+		}
+	}
+
+	a, err := db.Get(new(big.Int).SetUint64(8).Bytes())
+	fmt.Println("end leveldb", time.Now().Sub(ts).Seconds(), a, err)
+
+	dblmdb := GetEthDB(true)
+	ts = time.Now()
+	for index := 0; index < numbers; index++ {
+		fmt.Println("err", err, index, string(datas[index]), dblmdb)
+		if err := dblmdb.Put(datas[index], datas[index]); err != nil {
+
+			panic(err)
+		}
+	}
+
+	a, err = dblmdb.Get(new(big.Int).SetUint64(8).Bytes())
+	fmt.Println("end lmdb", time.Now().Sub(ts).Seconds(), string(a), err)
 }
