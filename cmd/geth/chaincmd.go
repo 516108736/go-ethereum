@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/ethereum/go-ethereum/ethdb/leveldb"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -285,6 +286,10 @@ func importChain(ctx *cli.Context) error {
 	_, db := utils.MakeChain(ctx, stack, false)
 	defer db.Close()
 
+	accountDB, err := leveldb.New("./account", 512, 524288, "")
+	if err != nil {
+		panic(err)
+	}
 	it := db.NewIterator(nil, nil)
 	cnt := make([][]byte, 0)
 	for it.Next() {
@@ -295,14 +300,24 @@ func importChain(ctx *cli.Context) error {
 			cnt = append(cnt, vv)
 		}
 
-		if len(cnt) == 10 {
-			break
+		if len(cnt) == 100000 {
+			Set(accountDB, cnt)
+			cnt = make([][]byte, 0)
+
 		}
 	}
+
 	return nil
 
 }
 
+func Set(accDB *leveldb.Database, bs [][]byte) {
+	batch := accDB.NewBatch()
+	for _, v := range bs {
+		batch.Put(v, []byte{1})
+	}
+	batch.Write()
+}
 func exportChain(ctx *cli.Context) error {
 	if len(ctx.Args()) < 1 {
 		utils.Fatalf("This command requires an argument.")
