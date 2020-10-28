@@ -17,13 +17,12 @@
 package main
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
-	"sync/atomic"
 	"time"
 
 	"github.com/ethereum/go-ethereum/cmd/utils"
@@ -283,91 +282,25 @@ func importChain(ctx *cli.Context) error {
 	defer stack.Close()
 	common.FastDBMode = ctx.GlobalBool(utils.IsFastDBMOde.Name)
 	fmt.Println("=========IsFastMode============", common.FastDBMode)
-	chain, db := utils.MakeChain(ctx, stack, false)
+	_, db := utils.MakeChain(ctx, stack, false)
 	defer db.Close()
 
-	// Start periodically gathering memory profiles
-	var peakMemAlloc, peakMemSys uint64
-	go func() {
-		stats := new(runtime.MemStats)
-		for {
-			runtime.ReadMemStats(stats)
-			if atomic.LoadUint64(&peakMemAlloc) < stats.Alloc {
-				atomic.StoreUint64(&peakMemAlloc, stats.Alloc)
-			}
-			if atomic.LoadUint64(&peakMemSys) < stats.Sys {
-				atomic.StoreUint64(&peakMemSys, stats.Sys)
-			}
-			time.Sleep(5 * time.Second)
+	it := db.NewIterator(nil, nil)
+	cnt := make([][]byte, 0)
+	for it.Next() {
+		kk := it.Key()
+		vv := it.Value()
+		if len(kk) == 20 {
+			fmt.Println("it.key", hex.EncodeToString(it.Key()), hex.EncodeToString(it.Value()))
+			cnt = append(cnt, vv)
 		}
-	}()
-	// Import the chain
-	start := time.Now()
 
-	var importErr error
-
-	if len(ctx.Args()) == 1 {
-		if err := utils.ImportChain(chain, ctx.Args().First()); err != nil {
-			importErr = err
-			log.Error("Import error", "err", err)
-		}
-	} else {
-		for _, arg := range ctx.Args() {
-			if err := utils.ImportChain(chain, arg); err != nil {
-				importErr = err
-				log.Error("Import error", "file", arg, "err", err)
-			}
+		if len(cnt) == 10 {
+			break
 		}
 	}
-	chain.Stop()
-	fmt.Printf("Import done in %v.\n\n", time.Since(start))
+	return nil
 
-	// Output pre-compaction stats mostly to see the import trashing
-	stats, err := db.Stat("leveldb.stats")
-	if err != nil {
-		utils.Fatalf("Failed to read database stats: %v", err)
-	}
-	fmt.Println(stats)
-
-	ioStats, err := db.Stat("leveldb.iostats")
-	if err != nil {
-		utils.Fatalf("Failed to read database iostats: %v", err)
-	}
-	fmt.Println(ioStats)
-
-	// Print the memory statistics used by the importing
-	mem := new(runtime.MemStats)
-	runtime.ReadMemStats(mem)
-
-	fmt.Printf("Object memory: %.3f MB current, %.3f MB peak\n", float64(mem.Alloc)/1024/1024, float64(atomic.LoadUint64(&peakMemAlloc))/1024/1024)
-	fmt.Printf("System memory: %.3f MB current, %.3f MB peak\n", float64(mem.Sys)/1024/1024, float64(atomic.LoadUint64(&peakMemSys))/1024/1024)
-	fmt.Printf("Allocations:   %.3f million\n", float64(mem.Mallocs)/1000000)
-	fmt.Printf("GC pause:      %v\n\n", time.Duration(mem.PauseTotalNs))
-
-	if ctx.GlobalBool(utils.NoCompactionFlag.Name) {
-		return nil
-	}
-
-	// Compact the entire database to more accurately measure disk io and print the stats
-	start = time.Now()
-	fmt.Println("Compacting entire database...")
-	if err = db.Compact(nil, nil); err != nil {
-		utils.Fatalf("Compaction failed: %v", err)
-	}
-	fmt.Printf("Compaction done in %v.\n\n", time.Since(start))
-
-	stats, err = db.Stat("leveldb.stats")
-	if err != nil {
-		utils.Fatalf("Failed to read database stats: %v", err)
-	}
-	fmt.Println(stats)
-
-	ioStats, err = db.Stat("leveldb.iostats")
-	if err != nil {
-		utils.Fatalf("Failed to read database iostats: %v", err)
-	}
-	fmt.Println(ioStats)
-	return importErr
 }
 
 func exportChain(ctx *cli.Context) error {
