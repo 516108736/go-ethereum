@@ -290,22 +290,29 @@ func importChain(ctx *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
+	//it := db.NewIterator(nil, nil)
+	//cnt := make([][]byte, 0)
+	//for it.Next() {
+	//	kk := it.Key()
+	//	vv := it.Value()
+	//	if len(kk) == 20 {
+	//		fmt.Println("it.key", hex.EncodeToString(it.Key()), hex.EncodeToString(it.Value()))
+	//		cnt = append(cnt, vv)
+	//	}
+	//
+	//	if len(cnt) == 100000 {
+	//		Set(accountDB, cnt)
+	//		cnt = make([][]byte, 0)
+	//
+	//	}
+	//}
+
+	cnt := 0
 	it := db.NewIterator(nil, nil)
-	cnt := make([][]byte, 0)
 	for it.Next() {
-		kk := it.Key()
-		vv := it.Value()
-		if len(kk) == 20 {
-			fmt.Println("it.key", hex.EncodeToString(it.Key()), hex.EncodeToString(it.Value()))
-			cnt = append(cnt, vv)
-		}
-
-		if len(cnt) == 100000 {
-			Set(accountDB, cnt)
-			cnt = make([][]byte, 0)
-
-		}
+		cnt++
 	}
+	fmt.Println("cnt---", cnt)
 
 	return nil
 
