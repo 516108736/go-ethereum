@@ -291,18 +291,20 @@ func importChain(ctx *cli.Context) error {
 		panic(err)
 	}
 	it := db.NewIterator(nil, nil)
-	cnt := make([][]byte, 0)
-	kk := make([]byte, 0)
+	cnt := make([][]byte, 10, 10)
+	index := 0
 	for it.Next() {
-		kk = it.Key()
-		if len(kk) == 20 {
-			cnt = append(cnt, kk)
+
+		if len(it.Key()) == 20 {
+			cnt[index] = make([]byte, 20)
+			copy(it.Key(), cnt[index])
 			fmt.Println("it.key", hex.EncodeToString(it.Key()), cnt)
+			index++
 		}
 
-		if len(cnt) == 10 {
+		if index == 10 {
 			Set(accountDB, cnt)
-			cnt = make([][]byte, 0)
+			cnt = make([][]byte, 10, 10)
 
 		}
 	}
