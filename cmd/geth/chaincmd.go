@@ -292,8 +292,9 @@ func importChain(ctx *cli.Context) error {
 	}
 	it := db.NewIterator(nil, nil)
 	cnt := make([][]byte, 0)
+	kk := make([]byte, 0)
 	for it.Next() {
-		kk := it.Key()
+		kk = it.Key()
 		if len(kk) == 20 {
 			cnt = append(cnt, kk)
 			fmt.Println("it.key", hex.EncodeToString(it.Key()), cnt)
