@@ -299,11 +299,12 @@ func importChain(ctx *cli.Context) error {
 		if index == 10 {
 			Set(accountDB, cnt)
 			cnt = make([][]byte, 10, 10)
+			index = 0
 
 		}
 		if len(it.Key()) == 20 {
 			cnt[index] = make([]byte, 20)
-			copy(it.Key(), cnt[index])
+			copy(cnt[index], it.Key())
 			fmt.Println("it.key", hex.EncodeToString(it.Key()), cnt)
 			index++
 		}
