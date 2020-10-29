@@ -17,6 +17,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/ethereum/go-ethereum/ethdb/leveldb"
@@ -322,6 +323,7 @@ func Set(accDB *leveldb.Database, bs [][]byte) {
 		batch.Put(bs[index], []byte{1})
 	}
 	batch.Write()
+	fmt.Println("batch---", hex.EncodeToString(bs[0]), hex.EncodeToString(bs[len(bs)-1]))
 }
 func exportChain(ctx *cli.Context) error {
 	if len(ctx.Args()) < 1 {
