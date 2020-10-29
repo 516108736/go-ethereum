@@ -295,6 +295,7 @@ func importChain(ctx *cli.Context) error {
 	index := 0
 	for it.Next() {
 
+		fmt.Println("indexxxx", index)
 		if index == 10 {
 			Set(accountDB, cnt)
 			cnt = make([][]byte, 10, 10)
