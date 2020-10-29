@@ -290,38 +290,31 @@ func importChain(ctx *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	//it := db.NewIterator(nil, nil)
-	//cnt := make([][]byte, 0)
-	//for it.Next() {
-	//	kk := it.Key()
-	//	vv := it.Value()
-	//	if len(kk) == 20 {
-	//		fmt.Println("it.key", hex.EncodeToString(it.Key()), hex.EncodeToString(it.Value()))
-	//		cnt = append(cnt, vv)
-	//	}
-	//
-	//	if len(cnt) == 100000 {
-	//		Set(accountDB, cnt)
-	//		cnt = make([][]byte, 0)
-	//
-	//	}
-	//}
-
-	cnt := 0
 	it := db.NewIterator(nil, nil)
+	cnt := make([][]byte, 0)
 	for it.Next() {
-		cnt++
+		kk := it.Key()
+		if len(kk) == 20 {
+			cnt = append(cnt, kk)
+			fmt.Println("it.key", hex.EncodeToString(it.Key()), cnt)
+		}
+
+		if len(cnt) == 10 {
+			Set(accountDB, cnt)
+			cnt = make([][]byte, 0)
+
+		}
 	}
-	fmt.Println("cnt---", cnt)
 
 	return nil
 
 }
 
 func Set(accDB *leveldb.Database, bs [][]byte) {
+	//fmt.Println
 	batch := accDB.NewBatch()
-	for _, v := range bs {
-		batch.Put(v, []byte{1})
+	for index, _ := range bs {
+		batch.Put(bs[index], []byte{1})
 	}
 	batch.Write()
 }
