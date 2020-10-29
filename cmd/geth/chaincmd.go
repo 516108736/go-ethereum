@@ -295,6 +295,11 @@ func importChain(ctx *cli.Context) error {
 	index := 0
 	for it.Next() {
 
+		if index == 10 {
+			Set(accountDB, cnt)
+			cnt = make([][]byte, 10, 10)
+
+		}
 		if len(it.Key()) == 20 {
 			cnt[index] = make([]byte, 20)
 			copy(it.Key(), cnt[index])
@@ -302,11 +307,6 @@ func importChain(ctx *cli.Context) error {
 			index++
 		}
 
-		if index == 10 {
-			Set(accountDB, cnt)
-			cnt = make([][]byte, 10, 10)
-
-		}
 	}
 
 	return nil
