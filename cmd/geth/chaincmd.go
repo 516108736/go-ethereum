@@ -17,7 +17,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/ethereum/go-ethereum/ethdb/leveldb"
@@ -291,21 +290,23 @@ func importChain(ctx *cli.Context) error {
 		panic(err)
 	}
 	it := db.NewIterator(nil, nil)
-	cnt := make([][]byte, 10, 10)
+
+	batch := 1000000
+	cnt := make([][]byte, batch, batch)
 	index := 0
 	for it.Next() {
 
-		fmt.Println("indexxxx", index)
-		if index == 10 {
+		//fmt.Println("indexxxx", index)
+		if index == batch {
 			Set(accountDB, cnt)
-			cnt = make([][]byte, 10, 10)
+			cnt = make([][]byte, batch, batch)
 			index = 0
 
 		}
 		if len(it.Key()) == 20 {
 			cnt[index] = make([]byte, 20)
 			copy(cnt[index], it.Key())
-			fmt.Println("it.key", hex.EncodeToString(it.Key()), cnt)
+			//fmt.Println("it.key", hex.EncodeToString(it.Key()), cnt)
 			index++
 		}
 
@@ -316,7 +317,6 @@ func importChain(ctx *cli.Context) error {
 }
 
 func Set(accDB *leveldb.Database, bs [][]byte) {
-	//fmt.Println
 	batch := accDB.NewBatch()
 	for index, _ := range bs {
 		batch.Put(bs[index], []byte{1})
