@@ -55,10 +55,10 @@ func NewStateProcessor(config *params.ChainConfig, bc *BlockChain, engine consen
 // returns the amount of gas that was used in the process. If any of the
 // transactions failed to execute due to insufficient gas it will return an error.
 func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (types.Receipts, []*types.Log, uint64, error) {
-	if block.NumberU64() == 1920000 {
+	if block.NumberU64() == 1920001 {
 		panic("sb")
 	}
-	if block.NumberU64() == 1920001 {
+	if block.NumberU64() == 1920000 {
 		common.PrintData = true
 	} else {
 		common.PrintData = false
@@ -74,6 +74,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	if p.config.DAOForkSupport && p.config.DAOForkBlock != nil && p.config.DAOForkBlock.Cmp(block.Number()) == 0 {
 		misc.ApplyDAOHardFork(statedb)
 	}
+	fmt.Println("BBBB-start", block.NumberU64(), statedb.GetBalance(common.HexToAddress("0x304a554a310c7e546dfe434669c62820b7d83490")))
 	// Iterate over and process the individual transactions
 	for i, tx := range block.Transactions() {
 		statedb.Prepare(tx.Hash(), block.Hash(), i)
@@ -83,10 +84,11 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		}
 		receipts = append(receipts, receipt)
 		allLogs = append(allLogs, receipt.Logs...)
+		fmt.Println("BBBB-start-1", i, block.NumberU64(), statedb.GetBalance(common.HexToAddress("0x304a554a310c7e546dfe434669c62820b7d83490")))
 	}
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
 	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles())
-	fmt.Println("BBBB", block.NumberU64(), statedb.GetBalance(common.HexToAddress("0x304a554a310c7e546dfe434669c62820b7d83490")))
+	fmt.Println("BBBB-end", block.NumberU64(), statedb.GetBalance(common.HexToAddress("0x304a554a310c7e546dfe434669c62820b7d83490")))
 	return receipts, allLogs, *usedGas, nil
 }
 
