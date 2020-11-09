@@ -539,6 +539,7 @@ func (s *StateDB) getDeletedStateObject(addr common.Address) *stateObject {
 			s.setError(fmt.Errorf("getDeleteStateObject (%x) error: %v", addr.Bytes(), err))
 			return nil
 		}
+		fmt.Println("5422-----", len(enc), addr.String())
 		if len(enc) == 0 {
 			return nil
 		}
@@ -550,6 +551,7 @@ func (s *StateDB) getDeletedStateObject(addr common.Address) *stateObject {
 	}
 	// Insert into the live set
 	obj := newObject(s, addr, *data)
+	fmt.Println("5534------------", obj.data.Balance)
 	s.setStateObject(obj)
 	return obj
 }
@@ -587,10 +589,10 @@ func (s *StateDB) createObject(addr common.Address) (newobj, prev *stateObject) 
 		s.journal.append(resetObjectChange{prev: prev, prevdestruct: prevdestruct})
 	}
 
-	if prev!=nil{
-		newobj.suisideAndNewInOneBlock=prev.deleted
-		if prev.suisideAndNewInOneBlock{
-			newobj.suisideAndNewInOneBlock=true
+	if prev != nil {
+		newobj.suisideAndNewInOneBlock = prev.deleted
+		if prev.suisideAndNewInOneBlock {
+			newobj.suisideAndNewInOneBlock = true
 		}
 	}
 	s.setStateObject(newobj)
@@ -832,15 +834,15 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 				rawdb.WriteCode(codeWriter, common.BytesToHash(obj.CodeHash()), obj.code)
 				obj.dirtyCode = false
 			}
-			if obj.suisideAndNewInOneBlock{
-				DeleteStorage(addr,s.db.TrieDB().DiskDB())
+			if obj.suisideAndNewInOneBlock {
+				DeleteStorage(addr, s.db.TrieDB().DiskDB())
 			}
 			// Write any storage changes in the state object to its storage trie
 			if err := obj.CommitTrie(s.db); err != nil {
 				return common.Hash{}, err
 			}
-		}else{
-			DeleteStorage(addr,s.db.TrieDB().DiskDB())
+		} else {
+			DeleteStorage(addr, s.db.TrieDB().DiskDB())
 		}
 	}
 	if len(s.stateObjectsDirty) > 0 {
