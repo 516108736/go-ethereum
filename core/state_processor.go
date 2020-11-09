@@ -17,6 +17,7 @@
 package core
 
 import (
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus"
 	"github.com/ethereum/go-ethereum/consensus/misc"
@@ -54,6 +55,9 @@ func NewStateProcessor(config *params.ChainConfig, bc *BlockChain, engine consen
 // returns the amount of gas that was used in the process. If any of the
 // transactions failed to execute due to insufficient gas it will return an error.
 func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg vm.Config) (types.Receipts, []*types.Log, uint64, error) {
+	if block.NumberU64() == 1920001 {
+		panic("sb")
+	}
 	var (
 		receipts types.Receipts
 		usedGas  = new(uint64)
@@ -77,7 +81,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	}
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
 	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles())
-
+	fmt.Println("BBBB", block.NumberU64(), statedb.GetBalance(common.HexToAddress("0x304a554a310c7e546dfe434669c62820b7d83490")))
 	return receipts, allLogs, *usedGas, nil
 }
 
