@@ -74,7 +74,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	if p.config.DAOForkSupport && p.config.DAOForkBlock != nil && p.config.DAOForkBlock.Cmp(block.Number()) == 0 {
 		misc.ApplyDAOHardFork(statedb)
 	}
-	fmt.Println("BBBB-start", block.NumberU64(), statedb.GetBalance(common.HexToAddress("0x304a554a310c7e546dfe434669c62820b7d83490")))
+	fmt.Println("BBBB-start", block.NumberU64(), statedb.GetBalance(common.HexToAddress("0x304a554a310C7e546dfe434669C62820b7D83490")))
 	// Iterate over and process the individual transactions
 	for i, tx := range block.Transactions() {
 		statedb.Prepare(tx.Hash(), block.Hash(), i)
@@ -84,11 +84,11 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		}
 		receipts = append(receipts, receipt)
 		allLogs = append(allLogs, receipt.Logs...)
-		fmt.Println("BBBB-start-1", i, block.NumberU64(), statedb.GetBalance(common.HexToAddress("0x304a554a310c7e546dfe434669c62820b7d83490")))
+		fmt.Println("BBBB-start-1", i, block.NumberU64(), statedb.GetBalance(common.HexToAddress("0x304a554a310C7e546dfe434669C62820b7D83490")))
 	}
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
 	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles())
-	fmt.Println("BBBB-end", block.NumberU64(), statedb.GetBalance(common.HexToAddress("0x304a554a310c7e546dfe434669c62820b7d83490")))
+	fmt.Println("BBBB-end", block.NumberU64(), statedb.GetBalance(common.HexToAddress("0x304a554a310C7e546dfe434669C62820b7D83490")))
 	return receipts, allLogs, *usedGas, nil
 }
 
