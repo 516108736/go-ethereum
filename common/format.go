@@ -23,6 +23,10 @@ import (
 	"time"
 )
 
+var (
+	PrintData = bool(false)
+)
+
 // PrettyDuration is a pretty printed version of a time.Duration value that cuts
 // the unnecessary precision off from the formatted textual representation.
 type PrettyDuration time.Duration
